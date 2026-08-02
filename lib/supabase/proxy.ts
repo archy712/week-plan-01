@@ -47,15 +47,22 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
+  // 공개 경로: 홈("/")과 /auth/* 전체. ("/login"은 이 프로젝트에 존재하지 않는
+  // 경로라서 제거했다 — 실제 로그인 페이지는 /auth/login이다.)
+  const pathname = request.nextUrl.pathname;
+  const isPublicPath = pathname === "/" || pathname.startsWith("/auth");
+
+  if (!user && !isPublicPath) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
+    return NextResponse.redirect(url);
+  }
+
+  if (user && (pathname === "/auth/login" || pathname === "/auth/sign-up")) {
+    // 이미 로그인된 사용자는 로그인/회원가입 페이지 대신 기본 진입지로 보낸다.
+    const url = request.nextUrl.clone();
+    url.pathname = "/protected/reports";
     return NextResponse.redirect(url);
   }
 

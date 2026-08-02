@@ -31,13 +31,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createClient } from "@/lib/supabase/client";
 import type { Tables } from "@/lib/supabase/database.types";
 import type { Department } from "@/lib/types/department";
 import { cn } from "@/lib/utils";
 
 type Profile = Pick<
   Tables<"profiles">,
-  "id" | "email" | "username" | "full_name" | "avatar_url"
+  | "id"
+  | "email"
+  | "username"
+  | "full_name"
+  | "avatar_url"
+  | "department_id"
 >;
 
 const profileFormSchema = z.object({
@@ -69,9 +75,7 @@ export function ProfileForm({
   profile: Profile;
   departments: Department[];
 } & React.ComponentPropsWithoutRef<"div">) {
-  const [submitState, setSubmitState] = useState<
-    "idle" | "success" | "error"
-  >("idle");
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const form = useForm<ProfileFormValues>({
@@ -80,9 +84,7 @@ export function ProfileForm({
       username: profile.username ?? "",
       fullName: profile.full_name ?? "",
       avatarUrl: profile.avatar_url ?? "",
-      // 실제 department_id 컬럼은 Task 009에서 추가되므로, 그 전까지는
-      // 항상 미선택 상태로 시작한다 (온보딩 강제 배너 확인용).
-      departmentId: "",
+      departmentId: profile.department_id ?? "",
     },
   });
 
@@ -92,17 +94,27 @@ export function ProfileForm({
   });
   const hasDepartment = departmentId.length > 0;
 
-  // TODO(Task 010): 더미 핸들러를 lib/supabase/client.ts 기반 실제 저장(department_id 포함)으로 교체
   const onSubmit = async (values: ProfileFormValues) => {
-    setSubmitState("idle");
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log("[dummy submit] profile form values:", values);
-      setSubmitState("success");
-      router.refresh();
-    } catch {
-      setSubmitState("error");
+    setError(null);
+    const supabase = createClient();
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({
+        username: values.username.trim() || null,
+        full_name: values.fullName.trim() || null,
+        avatar_url: values.avatarUrl.trim() || null,
+        department_id: values.departmentId,
+      })
+      .eq("id", profile.id);
+
+    if (updateError) {
+      setError(updateError.message);
+      return;
     }
+
+    router.push("/protected/reports");
+    router.refresh();
   };
 
   return (
@@ -120,9 +132,7 @@ export function ProfileForm({
         <CardContent>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(onSubmit, () =>
-                setSubmitState("idle"),
-              )}
+              onSubmit={form.handleSubmit(onSubmit, () => setError(null))}
               className="flex flex-col gap-6"
             >
               <div className="grid gap-2">
@@ -205,14 +215,7 @@ export function ProfileForm({
                 )}
               />
 
-              {submitState === "error" && (
-                <p className="text-sm text-red-500">오류가 발생했습니다.</p>
-              )}
-              {submitState === "success" && (
-                <p className="text-sm text-green-600">
-                  프로필이 저장되었습니다.
-                </p>
-              )}
+              {error && <p className="text-sm text-red-500">{error}</p>}
 
               <Button
                 type="submit"

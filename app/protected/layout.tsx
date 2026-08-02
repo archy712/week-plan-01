@@ -3,12 +3,30 @@ import { Suspense } from "react";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { MainNav } from "@/components/main-nav";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 
-// TODO(Task 010/012): 아래 하드코딩된 값을 lib/auth/guards.ts의
-// requireDepartment()/requireAdmin() 조회 결과로 교체한다.
-const TEMP_HAS_DEPARTMENT = true;
-const TEMP_IS_ADMIN = false;
+async function MainNavServer() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+
+  let hasDepartment = false;
+  let isAdmin = false;
+
+  if (userId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("department_id, role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    hasDepartment = Boolean(profile?.department_id);
+    isAdmin = profile?.role === "admin";
+  }
+
+  return <MainNav hasDepartment={hasDepartment} isAdmin={isAdmin} />;
+}
 
 export default function ProtectedLayout({
   children,
@@ -24,10 +42,7 @@ export default function ProtectedLayout({
           </div>
         ) : (
           <Suspense fallback={<div className="h-16 w-full" />}>
-            <MainNav
-              hasDepartment={TEMP_HAS_DEPARTMENT}
-              isAdmin={TEMP_IS_ADMIN}
-            />
+            <MainNavServer />
           </Suspense>
         )}
         <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">

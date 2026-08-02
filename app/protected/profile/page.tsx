@@ -1,25 +1,23 @@
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile-form";
-import { mockDepartments } from "@/lib/mock/departments";
+import { requireUser } from "@/lib/auth/guards";
+import { listDepartments } from "@/lib/data/departments";
+import { createClient } from "@/lib/supabase/server";
 
 async function ProfileContent() {
+  const { userId, email } = await requireUser();
   const supabase = await createClient();
-  const { data, error: claimsError } = await supabase.auth.getClaims();
 
-  if (claimsError || !data?.claims) {
-    redirect("/auth/login");
-  }
-
-  const userId = data.claims.sub;
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id, email, username, full_name, avatar_url")
-    .eq("id", userId)
-    .maybeSingle();
+  const [{ data: profile, error: profileError }, departments] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, email, username, full_name, avatar_url, department_id")
+        .eq("id", userId)
+        .maybeSingle(),
+      listDepartments(),
+    ]);
 
   if (profileError) {
     throw profileError;
@@ -30,14 +28,14 @@ async function ProfileContent() {
       profile={
         profile ?? {
           id: userId,
-          email: data.claims.email ?? null,
+          email,
           username: null,
           full_name: null,
           avatar_url: null,
+          department_id: null,
         }
       }
-      // TODO(Task 009/010): mock 목록 대신 Supabase departments 테이블 조회로 교체
-      departments={mockDepartments}
+      departments={departments}
     />
   );
 }
