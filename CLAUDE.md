@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Next.js 16 (App Router) + Supabase Auth 스타터 킷입니다. `@supabase/ssr`로 쿠키 기반 세션을 Client Component, Server Component, Route Handler, `proxy.ts` 전반에서 공유합니다.
 
+이 저장소는 스타터 킷 위에 **부서 주간업무 일지 서비스**를 얹는 중입니다. 제품 요구사항은 `docs/PRD.md`, 개발 순서와 Task별 상세 명세·수락 기준은 `docs/ROADMAP.md`에 있습니다. 기능 개발 작업은 항상 `docs/ROADMAP.md`의 Task 순서를 따르고, Task를 완료하면 해당 항목을 로드맵에서 ✅로 표시하세요.
+
 ## 명령어
 
 ```bash
@@ -24,6 +26,8 @@ npm run lint    # ESLint 검사 (eslint-config-next의 core-web-vitals + typescr
 
 `app/`, `components/`, `lib/`는 모두 프로젝트 **루트**에 위치합니다 (`src/` 디렉토리 사용 안 함). 경로 별칭 `@/*`는 `tsconfig.json`에서 `./*`(루트)로 매핑됩니다. `docs/guides/`에 아키텍처/스타일/폼 처리에 대한 상세 가이드 5종이 있으니 관련 작업 전에 참고하세요.
 
+> ⚠️ `docs/guides/`의 예제 코드는 범용 Next.js 패턴 모음이라 이 저장소의 실제 관례와 다른 부분이 있습니다. 예: `forms-react-hook-form.md`는 Server Actions 기반 폼을 예시로 들지만 이 프로젝트는 **Client Component에서 `supabase.*` 직접 호출** 패턴을 씁니다(아래 "인증 라우팅 흐름" 참고). `nextjs-16.md`는 `npm run typecheck`/`npm run check-all`/`npm run format:check`를 언급하지만 이 저장소의 `package.json`에는 `dev`/`build`/`start`/`lint`만 정의되어 있습니다(위 "명령어" 참고). 가이드와 이 파일이 충돌하면 **이 CLAUDE.md를 우선**하세요.
+
 ### Supabase 클라이언트 3종 — 컨텍스트별로 반드시 구분해서 사용
 
 - `lib/supabase/client.ts` — `createBrowserClient`, Client Component(`"use client"`)에서만 사용.
@@ -35,7 +39,7 @@ npm run lint    # ESLint 검사 (eslint-config-next의 core-web-vitals + typescr
 
 1. 루트의 `proxy.ts`가 모든 요청(정적 파일 제외)에서 `updateSession()`을 호출합니다.
 2. `updateSession()`(`lib/supabase/proxy.ts`)은 `/`, `/login*`, `/auth/*`를 제외한 경로에서 세션이 없으면 `/auth/login`으로 리다이렉트합니다.
-3. `app/auth/*`에 로그인/회원가입/비밀번호 재설정/이메일 확인(`confirm/route.ts`) 페이지가 있고, `app/protected/*`가 인증이 필요한 영역입니다. 개별 서버 컴포넌트(`app/protected/page.tsx` 등)도 `getClaims()`로 재확인 후 `redirect("/auth/login")` 하는 이중 방어 패턴을 씁니다.
+3. `app/auth/*`에 로그인/회원가입/비밀번호 재설정/이메일 확인(`confirm/route.ts`) 페이지가 있고, `app/protected/*`가 인증이 필요한 영역입니다. 개별 서버 컴포넌트(`app/protected/profile/page.tsx` 등)도 `getClaims()`로 재확인 후 `redirect("/auth/login")` 하는 이중 방어 패턴을 씁니다. `app/protected/page.tsx`는 `/protected/reports`로 리다이렉트만 하는 진입점입니다.
 4. 로그인/회원가입 폼(`components/*-form.tsx`)은 Server Action이 아니라 **Client Component에서 `supabase.auth.*`를 직접 호출**하는 패턴입니다(`login-form.tsx`, `profile-form.tsx` 참고).
 
 ### DB 타입
