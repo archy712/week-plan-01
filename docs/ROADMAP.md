@@ -156,7 +156,7 @@
 
 > 더미 데이터를 실제 Supabase 데이터로 교체하고 RLS 기반 권한을 확정한다. 이 Phase의 모든 Task는 Playwright MCP 테스트가 **필수**다.
 
-- **Task 009: 데이터베이스 스키마 마이그레이션 및 RLS 정책 구현** - 우선순위
+- **Task 009: 데이터베이스 스키마 마이그레이션 및 RLS 정책 구현** - ✅ 완료
   - `mcp__supabase__apply_migration`으로 마이그레이션 적용:
     - `departments` 테이블 생성 (id uuid pk default gen_random_uuid(), name text not null unique, created_at timestamptz default now())
     - `user_role` enum 타입(`user` / `admin`) 생성
