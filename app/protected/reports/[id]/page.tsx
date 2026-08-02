@@ -1,16 +1,25 @@
+import { notFound } from "next/navigation";
+
+import { WeeklyReportDetail } from "@/components/weekly-report-detail";
+import { mockWeeklyReports } from "@/lib/mock/weekly-reports";
+
 export default async function ReportDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { id } = await params;
+  const { from } = await searchParams;
 
-  return (
-    <div className="flex-1 w-full flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">주간업무 상세</h1>
-      <p className="text-sm text-muted-foreground">
-        일지 ID: {id}
-      </p>
-    </div>
-  );
+  const report = mockWeeklyReports.find((item) => item.id === id);
+
+  if (!report) {
+    notFound();
+  }
+
+  const backHref = from === "admin" ? "/protected/admin" : "/protected/reports";
+
+  return <WeeklyReportDetail report={report} backHref={backHref} />;
 }

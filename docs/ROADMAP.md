@@ -135,7 +135,7 @@
   - 반응형: 모바일에서는 테이블 대신 카드 리스트로 전환
   - 수락 기준: 더미 데이터로 목록·필터·삭제 확인 모달까지 클릭 플로우가 끊김 없이 동작
 
-- **Task 007: 주간업무 작성·상세 화면 UI 구현 (F001/F003/F009 UI)**
+- **Task 007: 주간업무 작성·상세 화면 UI 구현 (F001/F003/F009 UI)** - ✅ 완료
   - `components/weekly-report-form.tsx`: 작성/수정 공용 폼 — 주차(시작일) 선택, 업무 내용 자유 텍스트(`Textarea`), 목표 종료일(선택 입력), **저장** / **취소** 버튼
   - React Hook Form + Zod 스키마: `week_start_date` 필수, `content` 필수(최소 길이), `target_end_date` nullable + `week_start_date` 이후 날짜 검증
   - `app/protected/reports/new/page.tsx`: 작성 모드 연결, 취소 시 목록 복귀
