@@ -219,7 +219,7 @@
 - [x] Playwright MCP: 같은 부서 **다른 사용자**가 작성한 일지를 수정·삭제할 수 있음 (F006 핵심)
 - [x] 엣지 케이스: 존재하지 않는 `[id]` 접근 시 404, 빈 목록일 때 EmptyState, `content` 미입력 시 검증 에러, `target_end_date` 미입력 시 정상 저장
 
-- **Task 012: 부서별 RBAC 및 관리자 전체 부서 조회 구현 (F006/F007)**
+- **Task 012: 부서별 RBAC 및 관리자 전체 부서 조회 구현 (F006/F007)** - ✅ 완료
   - `lib/auth/guards.ts`에 `requireAdmin()` 구현: `profiles.role !== 'admin'`이면 `/protected/reports`로 리다이렉트(또는 404 처리)
   - `app/protected/admin/page.tsx`에서 `requireAdmin()` 적용 + 실제 `departments` 목록 조회, 선택 부서를 `searchParams`로 관리
   - Task 011의 `listReportsByDepartment()`를 **부서 파라미터만 확장해 재사용** (관리자 전용 중복 조회 함수 작성 금지)
@@ -229,13 +229,13 @@
   - 수락 기준: 일반 사용자의 `/protected/admin` 직접 접근이 차단되고, 관리자는 전 부서 CRUD 가능
 
 #### 테스트 체크리스트 (Task 012)
-- [ ] Playwright MCP: 일반 사용자 로그인 → 네비게이션에 "전체 부서 조회" 미노출
-- [ ] Playwright MCP: 일반 사용자가 `/protected/admin` 직접 URL 접근 → 차단/리다이렉트
-- [ ] Playwright MCP: 일반 사용자가 타 부서 일지 상세 URL 직접 접근 → 404
-- [ ] Playwright MCP: 관리자 로그인 → 전체 부서 조회 진입 → 부서 전환 시 목록 변경 확인
-- [ ] Playwright MCP: 관리자가 타 부서 일지를 상세 진입 → 수정 저장 → 반영 확인
-- [ ] Playwright MCP: 관리자가 타 부서 일지 삭제 → 목록에서 제거 확인
-- [ ] 엣지 케이스: 부서가 0건일 때 관리자 대시보드 EmptyState, 선택 부서에 일지가 없을 때 안내
+- [x] Playwright MCP: 일반 사용자 로그인 → 네비게이션에 "전체 부서 조회" 미노출
+- [x] Playwright MCP: 일반 사용자가 `/protected/admin` 직접 URL 접근 → 차단/리다이렉트
+- [x] Playwright MCP: 일반 사용자가 타 부서 일지 상세 URL 직접 접근 → 404
+- [x] Playwright MCP: 관리자 로그인 → 전체 부서 조회 진입 → 부서 전환 시 목록 변경 확인
+- [x] Playwright MCP: 관리자가 타 부서 일지를 상세 진입 → 수정 저장 → 반영 확인
+- [x] Playwright MCP: 관리자가 타 부서 일지 삭제 → 목록에서 제거 확인
+- [x] 엣지 케이스: 부서가 0건일 때 관리자 대시보드 EmptyState(코드 리뷰로 검증), 선택 부서에 일지가 없을 때 안내(Playwright 검증)
 
 - **Task 013: Notion 경유 PDF 다운로드 구현 (F008)**
   - 의존성 추가: `@notionhq/client`, headless 렌더링용 `puppeteer-core` + `@sparticuz/chromium`(Vercel 서버리스 호환) 또는 `playwright-core`

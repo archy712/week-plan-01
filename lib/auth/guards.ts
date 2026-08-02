@@ -58,11 +58,26 @@ export async function requireDepartment(): Promise<RequireDepartmentResult> {
 }
 
 /**
- * 인증 + 관리자(role = 'admin') 여부를 확인한다. 아니면 `/protected/reports`로
- * redirect()한다. 실제 구현은 Task 012에서 채운다.
+ * 인증 + 관리자(role = 'admin') 여부를 확인한다. 관리자가 아니면
+ * `/protected/reports`로 redirect()한다.
  */
 export async function requireAdmin(): Promise<RequireAdminResult> {
-  throw new Error(
-    "requireAdmin()는 아직 구현되지 않았습니다 (Task 012에서 구현 예정)",
-  );
+  const { userId } = await requireUser();
+  const supabase = await createClient();
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (profile?.role !== "admin") {
+    redirect("/protected/reports");
+  }
+
+  return { userId };
 }
