@@ -174,14 +174,14 @@
   - 수락 기준: 서로 다른 부서 계정 2개로 교차 조회/수정/삭제 시도가 **DB 레벨에서** 전부 차단됨
 
 #### 테스트 체크리스트 (Task 009)
-- [ ] `mcp__supabase__execute_sql`로 A부서 사용자 세션에서 B부서 `weekly_reports` SELECT 시 0건 반환
-- [ ] A부서 사용자가 B부서 레코드 UPDATE/DELETE 시도 시 0행 영향
-- [ ] `role = 'admin'` 계정이 전 부서 레코드를 SELECT/UPDATE/DELETE 가능
-- [ ] 일반 사용자가 자신의 `profiles.role`을 `admin`으로 UPDATE 시도 시 실패
-- [ ] `department_id`가 null인 사용자가 `weekly_reports` INSERT 시도 시 실패
-- [ ] `get_advisors` security 카테고리 경고 0건
+- [x] `mcp__supabase__execute_sql`로 A부서 사용자 세션에서 B부서 `weekly_reports` SELECT 시 0건 반환
+- [x] A부서 사용자가 B부서 레코드 UPDATE/DELETE 시도 시 0행 영향
+- [x] `role = 'admin'` 계정이 전 부서 레코드를 SELECT/UPDATE/DELETE 가능
+- [x] 일반 사용자가 자신의 `profiles.role`을 `admin`으로 UPDATE 시도 시 실패
+- [x] `department_id`가 null인 사용자가 `weekly_reports` INSERT 시도 시 실패
+- [x] `get_advisors` security 카테고리 경고 0건 (스키마 관련 항목 전부 해소, 무관한 기존 Auth 설정 1건은 별도 안내)
 
-- **Task 010: 부서 선택 온보딩 및 강제 리디렉션 구현 (F004/F005)**
+- **Task 010: 부서 선택 온보딩 및 강제 리디렉션 구현 (F004/F005)** - ✅ 완료
   - `components/profile-form.tsx`의 부서 선택을 실제 저장으로 연결: 클라이언트에서 `lib/supabase/client.ts`의 `createClient()`로 `profiles.update({ department_id })` (프로젝트 폼 컨벤션 준수)
   - `app/protected/profile/page.tsx`에서 `lib/supabase/server.ts`의 `createClient()` + `getClaims()`로 프로필과 `departments` 목록을 서버에서 페칭해 폼에 주입
   - `lib/auth/guards.ts` 구현: `requireUser()`(getClaims 실패 시 `/auth/login`), `requireDepartment()`(`department_id`가 null이면 `/protected/profile`로 `redirect()`)
@@ -193,14 +193,14 @@
   - 수락 기준: 부서 미선택 계정이 `/protected/reports`, `/protected/reports/new`, `/protected/admin` 직접 URL 입력 시 모두 `/protected/profile`로 리다이렉트
 
 #### 테스트 체크리스트 (Task 010)
-- [ ] Playwright MCP: 신규 가입 → 로그인 → 자동으로 프로필 페이지 도달 및 안내 배너 노출 확인
-- [ ] Playwright MCP: 부서 미선택 상태에서 `/protected/reports` 직접 접근 → 프로필로 리다이렉트
-- [ ] Playwright MCP: 부서 선택·저장 → 주간업무 목록으로 이동, 네비게이션에 목록/작성 메뉴 등장
-- [ ] Playwright MCP: 재로그인 시 부서가 유지되고 프로필로 되돌아가지 않음
-- [ ] 미인증 상태에서 보호 경로 접근 시 `/auth/login` 리다이렉트(기존 동작 회귀 없음)
-- [ ] 부서 미선택 저장 시도 시 Zod 검증 에러 노출
+- [x] Playwright MCP: 신규 가입 → 로그인 → 자동으로 프로필 페이지 도달 및 안내 배너 노출 확인
+- [x] Playwright MCP: 부서 미선택 상태에서 `/protected/reports`, `/protected/reports/new`, `/protected/admin` 직접 접근 → 모두 프로필로 리다이렉트
+- [x] Playwright MCP: 부서 선택·저장 → 주간업무 목록으로 이동, 네비게이션에 목록/작성 메뉴 등장
+- [x] Playwright MCP: 재로그인 시 부서가 유지되고 프로필로 되돌아가지 않음
+- [x] 미인증 상태에서 보호 경로 접근 시 `/auth/login` 리다이렉트(기존 동작 회귀 없음)
+- [x] 부서 미선택 저장 시도 시 Zod 검증 에러 노출
 
-- **Task 011: 주간업무 CRUD 데이터 연동 (F001/F002/F003/F009/F010)**
+- **Task 011: 주간업무 CRUD 데이터 연동 (F001/F002/F003/F009/F010)** - ✅ 완료
   - `lib/data/weekly-reports.ts` 신규: `listReportsByDepartment(departmentId, weekStart?)`, `getReportById(id)` — Server Component용 조회 함수 (`lib/supabase/server.ts` 사용, `profiles` 조인으로 작성자명 포함)
   - `app/protected/reports/page.tsx`에서 더미 데이터를 실제 조회로 교체, 주차 필터를 `searchParams`(await 필요)와 연결
   - `app/protected/reports/[id]/page.tsx`에서 `await params`로 id 수신 후 실제 조회, 미존재 시 `notFound()`
@@ -211,13 +211,13 @@
   - 수락 기준: 더미 데이터 참조(`lib/mock/*`)가 제품 코드에서 완전히 제거됨
 
 #### 테스트 체크리스트 (Task 011)
-- [ ] Playwright MCP: 일지 작성 → 목록에 즉시 반영(최신순 최상단) 확인
-- [ ] Playwright MCP: 목록 항목 클릭 → 상세 진입 → 내용 수정 → 저장 → 목록에 반영된 내용 확인
-- [ ] Playwright MCP: 상세에서 삭제 → 확인 모달 → 목록에서 사라짐 확인
-- [ ] Playwright MCP: 목록에서 항목별 삭제 아이콘 → 확인 모달 → 즉시 삭제 확인
-- [ ] Playwright MCP: 주차 필터 변경 시 해당 주차 항목만 노출
-- [ ] Playwright MCP: 같은 부서 **다른 사용자**가 작성한 일지를 수정·삭제할 수 있음 (F006 핵심)
-- [ ] 엣지 케이스: 존재하지 않는 `[id]` 접근 시 404, 빈 목록일 때 EmptyState, `content` 미입력 시 검증 에러, `target_end_date` 미입력 시 정상 저장
+- [x] Playwright MCP: 일지 작성 → 목록에 즉시 반영(최신순 최상단) 확인
+- [x] Playwright MCP: 목록 항목 클릭 → 상세 진입 → 내용 수정 → 저장 → 목록에 반영된 내용 확인
+- [x] Playwright MCP: 상세에서 삭제 → 확인 모달 → 목록에서 사라짐 확인
+- [x] Playwright MCP: 목록에서 항목별 삭제 아이콘 → 확인 모달 → 즉시 삭제 확인
+- [x] Playwright MCP: 주차 필터 변경 시 해당 주차 항목만 노출
+- [x] Playwright MCP: 같은 부서 **다른 사용자**가 작성한 일지를 수정·삭제할 수 있음 (F006 핵심)
+- [x] 엣지 케이스: 존재하지 않는 `[id]` 접근 시 404, 빈 목록일 때 EmptyState, `content` 미입력 시 검증 에러, `target_end_date` 미입력 시 정상 저장
 
 - **Task 012: 부서별 RBAC 및 관리자 전체 부서 조회 구현 (F006/F007)**
   - `lib/auth/guards.ts`에 `requireAdmin()` 구현: `profiles.role !== 'admin'`이면 `/protected/reports`로 리다이렉트(또는 404 처리)

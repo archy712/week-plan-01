@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { WeeklyReportDetail } from "@/components/weekly-report-detail";
-import { mockWeeklyReports } from "@/lib/mock/weekly-reports";
+import { getReportById } from "@/lib/data/weekly-reports";
 
 export default async function ReportDetailPage({
   params,
@@ -13,7 +13,7 @@ export default async function ReportDetailPage({
   const { id } = await params;
   const { from } = await searchParams;
 
-  const report = mockWeeklyReports.find((item) => item.id === id);
+  const report = await getReportById(id);
 
   if (!report) {
     notFound();

@@ -6,8 +6,8 @@ import { PdfDownloadButton } from "@/components/pdf-download-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WeekFilter } from "@/components/week-filter";
 import { WeeklyReportList } from "@/components/weekly-report-list";
-import { mockDepartments } from "@/lib/mock/departments";
-import { mockWeeklyReports } from "@/lib/mock/weekly-reports";
+import { listDepartments } from "@/lib/data/departments";
+import { listReportsByDepartment } from "@/lib/data/weekly-reports";
 
 export default async function AdminPage({
   searchParams,
@@ -16,13 +16,13 @@ export default async function AdminPage({
 }) {
   const { department, week } = await searchParams;
 
+  const departments = await listDepartments();
   const selectedDepartment =
-    mockDepartments.find((item) => item.id === department) ??
-    mockDepartments[0];
+    departments.find((item) => item.id === department) ?? departments[0];
 
-  const reports = mockWeeklyReports
-    .filter((report) => report.department_id === selectedDepartment.id)
-    .filter((report) => !week || report.week_start_date === week);
+  const reports = selectedDepartment
+    ? await listReportsByDepartment(selectedDepartment.id, week)
+    : [];
 
   return (
     <div className="flex-1 w-full flex flex-col gap-6">
@@ -35,23 +35,20 @@ export default async function AdminPage({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Suspense fallback={<Skeleton className="h-9 w-full sm:w-48" />}>
             <DepartmentFilter
-              departments={mockDepartments}
-              defaultDepartmentId={mockDepartments[0].id}
+              departments={departments}
+              defaultDepartmentId={departments[0]?.id ?? ""}
             />
           </Suspense>
           <Suspense fallback={<Skeleton className="h-9 w-full sm:w-56" />}>
             <WeekFilter />
           </Suspense>
         </div>
-        <PdfDownloadButton departmentName={selectedDepartment.name} />
+        {selectedDepartment && (
+          <PdfDownloadButton departmentName={selectedDepartment.name} />
+        )}
       </div>
 
-      {/* 부서/주차가 바뀔 때마다 리마운트해 목록의 로컬 삭제 상태를 새 필터 결과로 초기화한다 */}
-      <WeeklyReportList
-        key={`${selectedDepartment.id}:${week ?? "all"}`}
-        reports={reports}
-        fromParam="admin"
-      />
+      <WeeklyReportList reports={reports} fromParam="admin" />
     </div>
   );
 }

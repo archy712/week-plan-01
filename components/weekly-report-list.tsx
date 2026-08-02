@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { createClient } from "@/lib/supabase/client";
 import type { WeeklyReportListItem } from "@/lib/types/weekly-report";
 import { formatDate } from "@/lib/utils/date";
 import { formatWeekRange } from "@/lib/utils/week";
@@ -43,14 +44,11 @@ interface WeeklyReportListProps {
   fromParam?: string;
 }
 
-export function WeeklyReportList({
-  reports: initialReports,
-  fromParam,
-}: WeeklyReportListProps) {
+export function WeeklyReportList({ reports, fromParam }: WeeklyReportListProps) {
   const router = useRouter();
-  const [reports, setReports] = useState(initialReports);
   const [pendingDelete, setPendingDelete] =
     useState<WeeklyReportListItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleRowClick = (id: string) => {
     const query = fromParam ? `?from=${fromParam}` : "";
@@ -65,14 +63,26 @@ export function WeeklyReportList({
     setPendingDelete(report);
   };
 
-  // TODO(Task 011): lib/supabase/client.ts 기반 실제 삭제로 교체
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!pendingDelete) return;
-    setReports((prev) =>
-      prev.filter((report) => report.id !== pendingDelete.id),
-    );
-    toast.success("일지를 삭제했습니다.");
+    setIsDeleting(true);
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("weekly_reports")
+      .delete()
+      .eq("id", pendingDelete.id);
+
+    setIsDeleting(false);
     setPendingDelete(null);
+
+    if (error) {
+      toast.error("일지를 삭제하지 못했습니다. 다시 시도해주세요.");
+      return;
+    }
+
+    toast.success("일지를 삭제했습니다.");
+    router.refresh();
   };
 
   if (reports.length === 0) {
@@ -174,13 +184,16 @@ export function WeeklyReportList({
           <AlertDialogHeader>
             <AlertDialogTitle>일지를 삭제하시겠습니까?</AlertDialogTitle>
             <AlertDialogDescription>
-              이 작업은 되돌릴 수 없습니다. 삭제하면 목록에서 즉시 사라집니다.
+              이 작업은 되돌릴 수 없습니다. 삭제하면 목록에서 사라집니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>
-              삭제
+            <AlertDialogCancel disabled={isDeleting}>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "삭제 중..." : "삭제"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

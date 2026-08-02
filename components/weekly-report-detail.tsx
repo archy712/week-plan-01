@@ -19,7 +19,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { WeeklyReportForm } from "@/components/weekly-report-form";
-import type { WeeklyReportInput, WeeklyReportListItem } from "@/lib/types/weekly-report";
+import { createClient } from "@/lib/supabase/client";
+import type {
+  WeeklyReportInput,
+  WeeklyReportListItem,
+} from "@/lib/types/weekly-report";
 import { formatDate, formatDateTime } from "@/lib/utils/date";
 import { formatWeekRange } from "@/lib/utils/week";
 
@@ -29,31 +33,53 @@ interface WeeklyReportDetailProps {
 }
 
 export function WeeklyReportDetail({
-  report: initialReport,
+  report,
   backHref,
 }: WeeklyReportDetailProps) {
   const router = useRouter();
-  const [report, setReport] = useState(initialReport);
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // TODO(Task 011): lib/supabase/client.ts 기반 실제 update로 교체
   const handleUpdate = async (values: WeeklyReportInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setReport((prev) => ({
-      ...prev,
-      ...values,
-      updated_at: new Date().toISOString(),
-    }));
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("weekly_reports")
+      .update({
+        week_start_date: values.week_start_date,
+        content: values.content,
+        target_end_date: values.target_end_date,
+      })
+      .eq("id", report.id);
+
+    if (error) {
+      toast.error("주간업무 일지를 수정하지 못했습니다. 다시 시도해주세요.");
+      return;
+    }
+
     toast.success("주간업무 일지를 수정했습니다.");
     setMode("view");
+    router.refresh();
   };
 
-  // TODO(Task 011): lib/supabase/client.ts 기반 실제 delete로 교체
   const handleConfirmDelete = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast.success("일지를 삭제했습니다.");
+    setIsDeleting(true);
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("weekly_reports")
+      .delete()
+      .eq("id", report.id);
+
+    setIsDeleting(false);
     setIsDeleteDialogOpen(false);
+
+    if (error) {
+      toast.error("일지를 삭제하지 못했습니다. 다시 시도해주세요.");
+      return;
+    }
+
+    toast.success("일지를 삭제했습니다.");
     router.push(backHref);
   };
 
@@ -135,9 +161,12 @@ export function WeeklyReportDetail({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>
-              삭제
+            <AlertDialogCancel disabled={isDeleting}>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "삭제 중..." : "삭제"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
