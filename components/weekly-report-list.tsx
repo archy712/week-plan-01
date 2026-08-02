@@ -26,31 +26,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { WeeklyReportListItem } from "@/lib/types/weekly-report";
+import { formatDate } from "@/lib/utils/date";
 import { formatWeekRange } from "@/lib/utils/week";
 
 const CONTENT_SUMMARY_MAX_LENGTH = 40;
-
-const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
-  month: "long",
-  day: "numeric",
-});
 
 function summarizeContent(content: string) {
   if (content.length <= CONTENT_SUMMARY_MAX_LENGTH) return content;
   return `${content.slice(0, CONTENT_SUMMARY_MAX_LENGTH)}…`;
 }
 
-function formatTargetEndDate(targetEndDate: string | null) {
-  if (!targetEndDate) return "-";
-  return dateFormatter.format(new Date(targetEndDate));
-}
-
 interface WeeklyReportListProps {
   reports: WeeklyReportListItem[];
+  // 관리자 대시보드에서 재사용할 때 상세 페이지의 "목록으로" 복귀 경로를
+  // 구분하기 위한 값. 예: "admin" → 상세로 이동 시 ?from=admin이 붙는다.
+  fromParam?: string;
 }
 
 export function WeeklyReportList({
   reports: initialReports,
+  fromParam,
 }: WeeklyReportListProps) {
   const router = useRouter();
   const [reports, setReports] = useState(initialReports);
@@ -58,7 +53,8 @@ export function WeeklyReportList({
     useState<WeeklyReportListItem | null>(null);
 
   const handleRowClick = (id: string) => {
-    router.push(`/protected/reports/${id}`);
+    const query = fromParam ? `?from=${fromParam}` : "";
+    router.push(`/protected/reports/${id}${query}`);
   };
 
   const handleDeleteClick = (
@@ -118,7 +114,7 @@ export function WeeklyReportList({
                   {summarizeContent(report.content)}
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {formatTargetEndDate(report.target_end_date)}
+                  {formatDate(report.target_end_date)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
@@ -162,7 +158,7 @@ export function WeeklyReportList({
             </p>
             <p className="text-sm">{summarizeContent(report.content)}</p>
             <p className="text-xs text-muted-foreground">
-              목표 종료일: {formatTargetEndDate(report.target_end_date)}
+              목표 종료일: {formatDate(report.target_end_date)}
             </p>
           </div>
         ))}
