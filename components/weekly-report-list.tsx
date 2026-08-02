@@ -3,7 +3,6 @@
 import { FileText, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 
 import { EmptyState } from "@/components/empty-state";
 import {
@@ -28,6 +27,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import type { WeeklyReportListItem } from "@/lib/types/weekly-report";
 import { formatDate } from "@/lib/utils/date";
+import { notifyActionError, notifySuccess } from "@/lib/utils/toast";
 import { formatWeekRange } from "@/lib/utils/week";
 
 const CONTENT_SUMMARY_MAX_LENGTH = 40;
@@ -46,6 +46,18 @@ interface WeeklyReportListProps {
 
 export function WeeklyReportList({ reports, fromParam }: WeeklyReportListProps) {
   const router = useRouter();
+  // 서버에서 내려온 reports를 즉시 반영하기 위한 로컬 사본. 삭제 시 서버 응답을
+  // 기다리지 않고 이 상태를 먼저 갱신해 낙관적 업데이트를 구현한다.
+  const [items, setItems] = useState(reports);
+  // 필터/페이지 변경 등으로 부모(Server Component)가 새로운 reports를 내려주면
+  // (참조가 바뀌면) 렌더링 중에 로컬 상태를 동기화한다. useEffect로 동기화하면
+  // 불필요한 추가 렌더가 발생하므로 React가 권장하는 "렌더 중 상태 조정" 패턴을 사용한다.
+  const [prevReports, setPrevReports] = useState(reports);
+  if (reports !== prevReports) {
+    setPrevReports(reports);
+    setItems(reports);
+  }
+
   const [pendingDelete, setPendingDelete] =
     useState<WeeklyReportListItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,27 +77,38 @@ export function WeeklyReportList({ reports, fromParam }: WeeklyReportListProps) 
 
   const handleConfirmDelete = async () => {
     if (!pendingDelete) return;
+    const target = pendingDelete;
+
     setIsDeleting(true);
+    setPendingDelete(null);
+    // 낙관적 업데이트: 서버 응답을 기다리지 않고 목록에서 즉시 제거한다.
+    setItems((prev) => prev.filter((item) => item.id !== target.id));
 
     const supabase = createClient();
     const { error } = await supabase
       .from("weekly_reports")
       .delete()
-      .eq("id", pendingDelete.id);
+      .eq("id", target.id);
 
     setIsDeleting(false);
-    setPendingDelete(null);
 
     if (error) {
-      toast.error("일지를 삭제하지 못했습니다. 다시 시도해주세요.");
+      // 실패 시 원래 목록으로 롤백한다. 동시에 다른 삭제가 진행되지 않으므로
+      // isDeleting으로 잠긴 구간에서는 reports가 곧 원본 상태와 같다.
+      setItems(reports);
+      notifyActionError(
+        error,
+        "일지를 삭제하지 못했습니다. 다시 시도해주세요.",
+        router,
+      );
       return;
     }
 
-    toast.success("일지를 삭제했습니다.");
+    notifySuccess("일지를 삭제했습니다.");
     router.refresh();
   };
 
-  if (reports.length === 0) {
+  if (items.length === 0) {
     return (
       <EmptyState
         icon={FileText}
@@ -110,7 +133,7 @@ export function WeeklyReportList({ reports, fromParam }: WeeklyReportListProps) 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {reports.map((report) => (
+            {items.map((report) => (
               <TableRow
                 key={report.id}
                 onClick={() => handleRowClick(report.id)}
@@ -133,7 +156,7 @@ export function WeeklyReportList({ reports, fromParam }: WeeklyReportListProps) 
                     aria-label="삭제"
                     onClick={(event) => handleDeleteClick(event, report)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </TableCell>
               </TableRow>
@@ -144,7 +167,7 @@ export function WeeklyReportList({ reports, fromParam }: WeeklyReportListProps) 
 
       {/* 모바일: 카드 리스트 */}
       <div className="flex flex-col gap-3 md:hidden">
-        {reports.map((report) => (
+        {items.map((report) => (
           <div
             key={report.id}
             onClick={() => handleRowClick(report.id)}
@@ -160,7 +183,7 @@ export function WeeklyReportList({ reports, fromParam }: WeeklyReportListProps) 
                 aria-label="삭제"
                 onClick={(event) => handleDeleteClick(event, report)}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">

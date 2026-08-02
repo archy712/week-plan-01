@@ -31,6 +31,8 @@ export function DepartmentFilter({
   const handleChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("department", value);
+    // 부서가 바뀌면 페이지네이션은 1페이지부터 다시 시작한다.
+    params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   };
 

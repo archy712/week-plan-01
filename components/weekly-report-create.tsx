@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
 import { WeeklyReportForm } from "@/components/weekly-report-form";
 import { createClient } from "@/lib/supabase/client";
 import type { WeeklyReportInput } from "@/lib/types/weekly-report";
+import { notifyActionError, notifySuccess } from "@/lib/utils/toast";
 
 interface WeeklyReportCreateProps {
   departmentId: string;
@@ -30,11 +30,15 @@ export function WeeklyReportCreate({
     });
 
     if (error) {
-      toast.error("주간업무 일지를 저장하지 못했습니다. 다시 시도해주세요.");
+      notifyActionError(
+        error,
+        "주간업무 일지를 저장하지 못했습니다. 다시 시도해주세요.",
+        router,
+      );
       return;
     }
 
-    toast.success("주간업무 일지를 저장했습니다.");
+    notifySuccess("주간업무 일지를 저장했습니다.");
     router.push("/protected/reports");
     router.refresh();
   };

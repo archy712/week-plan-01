@@ -3,7 +3,7 @@
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,20 @@ export function MainNav({ hasDepartment, isAdmin }: MainNavProps) {
 
   const items = buildNavItems({ hasDepartment, isAdmin });
 
+  // 키보드 사용자가 모바일 메뉴를 Esc로 닫을 수 있게 한다.
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isMobileMenuOpen]);
+
   return (
     <nav className="w-full border-b border-b-foreground/10">
       <div className="w-full max-w-5xl mx-auto flex items-center justify-between p-3 px-5 text-sm">
@@ -79,7 +93,11 @@ export function MainNav({ hasDepartment, isAdmin }: MainNavProps) {
           aria-expanded={isMobileMenuOpen}
           onClick={() => setIsMobileMenuOpen((prev) => !prev)}
         >
-          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          {isMobileMenuOpen ? (
+            <X size={20} aria-hidden="true" />
+          ) : (
+            <Menu size={20} aria-hidden="true" />
+          )}
         </Button>
       </div>
 

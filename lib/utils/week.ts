@@ -58,4 +58,16 @@ export function toWeekOptions(
   });
 }
 
+// "전체 주차" 필터를 나타내는 값. week-filter.tsx("use client")와 서버 컴포넌트
+// (reports/admin의 page.tsx) 양쪽에서 동일한 상수를 참조해야 하는데, "use client"
+// 모듈의 named export를 서버 컴포넌트에서 import하면 실제 값이 아니라 클라이언트
+// 참조로 치환되어 비교가 깨진다. 그래서 순수 유틸 모듈인 이 파일에 둔다.
+export const ALL_WEEKS_VALUE = "all";
+
+// 오늘이 속한 주차의 시작일(월요일)을 YYYY-MM-DD 문자열로 반환한다.
+// 주차 필터 기본값("이번 주")을 서버/클라이언트 양쪽에서 동일하게 계산할 때 사용한다.
+export function getCurrentWeekStartISO(): string {
+  return toISODateString(getWeekStartDate());
+}
+
 export { toISODateString };

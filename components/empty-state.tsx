@@ -16,7 +16,9 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-16 text-center">
-      {Icon && <Icon className="h-10 w-10 text-muted-foreground" />}
+      {Icon && (
+        <Icon className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
+      )}
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium">{title}</p>
         {description && (

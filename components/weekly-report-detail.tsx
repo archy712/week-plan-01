@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
 import {
@@ -25,6 +24,7 @@ import type {
   WeeklyReportListItem,
 } from "@/lib/types/weekly-report";
 import { formatDate, formatDateTime } from "@/lib/utils/date";
+import { notifyActionError, notifySuccess } from "@/lib/utils/toast";
 import { formatWeekRange } from "@/lib/utils/week";
 
 interface WeeklyReportDetailProps {
@@ -53,11 +53,15 @@ export function WeeklyReportDetail({
       .eq("id", report.id);
 
     if (error) {
-      toast.error("주간업무 일지를 수정하지 못했습니다. 다시 시도해주세요.");
+      notifyActionError(
+        error,
+        "주간업무 일지를 수정하지 못했습니다. 다시 시도해주세요.",
+        router,
+      );
       return;
     }
 
-    toast.success("주간업무 일지를 수정했습니다.");
+    notifySuccess("주간업무 일지를 수정했습니다.");
     setMode("view");
     router.refresh();
   };
@@ -75,11 +79,15 @@ export function WeeklyReportDetail({
     setIsDeleteDialogOpen(false);
 
     if (error) {
-      toast.error("일지를 삭제하지 못했습니다. 다시 시도해주세요.");
+      notifyActionError(
+        error,
+        "일지를 삭제하지 못했습니다. 다시 시도해주세요.",
+        router,
+      );
       return;
     }
 
-    toast.success("일지를 삭제했습니다.");
+    notifySuccess("일지를 삭제했습니다.");
     router.push(backHref);
   };
 
