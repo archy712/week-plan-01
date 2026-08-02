@@ -60,5 +60,6 @@ npm run lint    # ESLint 검사 (eslint-config-next의 core-web-vitals + typescr
 
 ## Claude Code 커스텀 설정
 
-- `.claude/agents/`에 이 저장소 전용 서브에이전트가 정의되어 있습니다: `dev/nextjs-supabase-developer`(Next.js+Supabase 기능 구현), `dev/ui-markup-specialist`(정적 마크업/스타일링), `dev/nextjs-app-developer`(라우팅/레이아웃 구조), `dev/code-reviewer`, `dev/development-planner`(ROADMAP.md), `docs/prd-generator`, `docs/prd-validator` 등.
+- `.claude/agents/`에 이 저장소 전용 서브에이전트가 정의되어 있습니다: `dev/nextjs-supabase-developer`(Next.js+Supabase 기능 구현), `dev/ui-markup-specialist`(정적 마크업/스타일링), `dev/nextjs-app-developer`(라우팅/레이아웃 구조), `dev/code-reviewer`, `dev/development-planner`(ROADMAP.md), `dev/notion-api-database-expert`, `dev/starter-cleaner`, `docs/prd-generator`, `docs/prd-validator` 등.
 - `.claude/commands/git/`에 `commit`, `pr`, `merge`, `branch`, `update-roadmap` 슬래시 커맨드가 정의되어 있습니다.
+- `.claude/hooks/`에 Notification/Stop 이벤트 시 Slack 알림을 보내는 훅 스크립트(`notification-hook.sh`, `stop-hook.sh`)가 있습니다.
