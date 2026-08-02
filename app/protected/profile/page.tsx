@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile-form";
+import { mockDepartments } from "@/lib/mock/departments";
 
 async function ProfileContent() {
   const supabase = await createClient();
@@ -35,6 +36,8 @@ async function ProfileContent() {
           avatar_url: null,
         }
       }
+      // TODO(Task 009/010): mock 목록 대신 Supabase departments 테이블 조회로 교체
+      departments={mockDepartments}
     />
   );
 }
